@@ -1,65 +1,120 @@
 package main
 
 import (
+	"bufio"
+	"encoding/csv"
 	"fmt"
+	"io"
+	"log"
 	"nnet/matrix"
 	"nnet/network"
+	"os"
+	"strconv"
 )
 
 func main() {
-	i := 3
-	h := 3
-	o := 3
-	lr := 0.3
+	i := 784
+	h := 200
+	o := 10
+	lr := 0.2
 	n := network.New(i, h, o, lr)
-	/*result := n.Query([]float64{1.0, 0.5, -1.5})
+	epochs := 5
+	for i := 0; i < epochs; i++ {
+		csvTrain, err := os.Open("mnist_train_100.csv")
+		if err != nil {
+			log.Fatal(err)
+		}
+		r := csv.NewReader(bufio.NewReader(csvTrain))
 
-	fmt.Println(result)*/
+		for {
+			record, err := r.Read()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Fatal(err)
+			}
 
-	input := []float64{1.0, 0.5, -1.5}
-	target := []float64{0.01, 0.99, 0.01}
-	n.Train(input, target)
+			correctLabel, err := strconv.Atoi(record[0])
+			if err != nil {
+				log.Fatal(err)
+			}
 
-	m1 := matrix.NewEmpty(3, 5)
-	m1.Vals = []float64{2.0, 3.0, 5.0, 2.0, 5.0, 2.0, 4.0, 7.0, 1.0, 3.0, 1.0, 5.0, 4.0, 8.0, 3.0}
+			m := matrix.NewEmpty(28, 28)
+			for key, val := range record[1:] {
+				m.Vals[key], err = strconv.ParseFloat(val, 64)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
 
-	m2 := matrix.NewEmpty(5, 2)
-	m2.Vals = []float64{2.0, 1.0, 1.0, 3.0, 4.0, 2.0, 4.0, 3.0, 1.0, 2.0}
+			target := []float64{0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01}
+			target[correctLabel] = 0.99
 
-	fmt.Printf("\n\n\n*************************\n\n\n")
-	fmt.Println(m1.Mult(m2))
-
-	/*m1 := [][]float64{
-		[]float64{2.0, 3.0, 5.0, 2.0, 5.0},
-		[]float64{2.0, 4.0, 7.0, 1.0, 3.0},
-		[]float64{1.0, 5.0, 4.0, 8.0, 3.0},
+			input := convertRange(m)
+			n.Train(input.Vals, target)
+		}
 	}
 
-	m2 := [][]float64{
-		[]float64{2.0, 1.0},
-		[]float64{1.0, 3.0},
-		[]float64{4.0, 2.0},
-		[]float64{4.0, 3.0},
-		[]float64{1.0, 2.0},
-	}
-
-	m3 := make([][]float64, 0)
-
-	m4 := [][]float64{
-		[]float64{2.0},
-		[]float64{1.0},
-		[]float64{3.0},
-	}
-
-	r1, err := dot(m1, m2)
+	csvTest, err := os.Open("mnist_test_10.csv")
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
-	r2, err := dot(m1, m3)
-	if err != nil {
-		fmt.Println(err)
+	r := csv.NewReader(bufio.NewReader(csvTest))
+	countOfCorrectResults := 0
+
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		correctLabel, err := strconv.Atoi(record[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		m := matrix.NewEmpty(28, 28)
+		for key, val := range record[1:] {
+			m.Vals[key], err = strconv.ParseFloat(val, 64)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		input := convertRange(m)
+
+		output := n.Query(input.Vals)
+		var label int
+		max := output[0]
+
+		for i, val := range output {
+			if val > max {
+				max = val
+				label = i
+			}
+		}
+
+		if label == correctLabel {
+			countOfCorrectResults++
+		}
+
+		fmt.Printf("Label: %d, Result: %d\n", correctLabel, label)
 	}
-	fmt.Println(r1)
-	fmt.Println(r2)
-	fmt.Println(transp(m4))*/
+
+	fmt.Printf("Количество правильных ответов: %d\n", countOfCorrectResults)
+
+}
+
+func convertRange(m *matrix.Matrix) *matrix.Matrix {
+	return m.Map(func(x float64) float64 {
+		return x / 255.0
+	}).Map(func(x float64) float64 {
+		return x * 0.99
+	}).Map(func(x float64) float64 {
+		return x + 0.01
+	})
 }

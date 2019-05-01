@@ -26,12 +26,18 @@ func NewRand(rows, cols int) *Matrix {
 	a := NewEmpty(rows, cols)
 
 	for i := range a.Vals {
-		a.Vals[i] = rand.Float64()
+		a.Vals[i] = rand.Float64() - 0.5
 	}
 
 	return a
 }
 
+//m1 := matrix.NewEmpty(3, 5)
+//m1.Vals = []float64{2.0, 3.0, 5.0, 2.0, 5.0, 2.0, 4.0, 7.0, 1.0, 3.0, 1.0, 5.0, 4.0, 8.0, 3.0}
+//m2 := matrix.NewEmpty(5, 2)
+//m2.Vals = []float64{2.0, 1.0, 1.0, 3.0, 4.0, 2.0, 4.0, 3.0, 1.0, 2.0}
+//fmt.Printf("\n\n\n***********Test Mult**************\n\n\n")
+//fmt.Println(m1.Mult(m2))
 //                | 2 1 |
 //| 2 3 5 2 5 |   | 1 3 |   | 40 37 |
 //| 2 4 7 1 3 | x | 4 2 | = | 43 37 |
