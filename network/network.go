@@ -17,8 +17,6 @@ type neuralNetwork struct {
 type NeuralNetwork interface {
 	Train(input, target []float64)
 	Query(input []float64) []float64
-	Wih() *matrix.Matrix
-	Who() *matrix.Matrix
 }
 
 func New(inputNodes, hiddenNodes, outputNodes int, learnIngrate float64) NeuralNetwork {
@@ -56,10 +54,6 @@ func (n *neuralNetwork) Train(input, target []float64) {
 	//hiddenErrors
 	hiddenErrors := n.who.Transpose().Mult(outputErrors)
 	//Поправочные коэффициенты
-	//fmt.Println("Input-hidden before correct:")
-	//fmt.Println(n.wih)
-	//fmt.Println("Hidden-output before correct:")
-	//fmt.Println(n.who)
 	n.who.Vals = n.who.Sum(
 		fOutput.Map(func(x float64) float64 { return 1.0 - x }).
 			MultByEl(fOutput).
@@ -72,10 +66,6 @@ func (n *neuralNetwork) Train(input, target []float64) {
 			MultByEl(hiddenErrors).
 			Mult(in.Transpose()).
 			Map(func(x float64) float64 { return x * n.lr })).Vals
-	//fmt.Println("Input-hidden after correct:")
-	//fmt.Println(n.wih)
-	//fmt.Println("Hidden-output after correct:")
-	//fmt.Println(n.who)
 }
 
 func (n *neuralNetwork) Query(input []float64) []float64 {
@@ -93,14 +83,6 @@ func (n *neuralNetwork) Query(input []float64) []float64 {
 	fOutput := fInput.Map(sigmoid)
 
 	return fOutput.Vals
-}
-
-func (n *neuralNetwork) Wih() *matrix.Matrix {
-	return n.wih
-}
-
-func (n *neuralNetwork) Who() *matrix.Matrix {
-	return n.who
 }
 
 // sigmoid implements the sigmoid function
